@@ -21,7 +21,7 @@ section .rodata
 jump_table:
 						dq PutNum.Bin
 						dq PutChar.arg
-						dq PutNum.Decimal
+						dq PutDecimal
 times ('o' - 'd' - 1)   dq PutError
 						dq PutNum.Oct
 times ('s' - 'o' - 1)   dq PutError
@@ -41,7 +41,7 @@ _start:
 
 MyPrint:
 	mov rdi, format_str
-	mov rsi, 0xbaad
+	mov rsi, 655398
 	mov rdx, example_str
 
 	;pop r13					; saving return address
@@ -113,6 +113,7 @@ HandleFormatStr:
 
 HandleArg:
     inc rdi
+	xor rax, rax
     mov al, byte [rdi]
     
     cmp al, '%'
@@ -197,29 +198,73 @@ PutString:
 	ret
 
 
-PutNum:
+PutDecimal:
+.get_number:
+	xor rax, rax
 
-.Decimal:
+	mov rax, [rbp]
+	add rbp, 8
+
+
+	mov r10, number_buf
+	mov rbx, 10			; max num signs
+	push rbx
+	mov ecx, 10	
+.loop_division:
+	xor edx, edx
+	div ecx
+	add dx, '0'
+	mov [r10], dx
+	inc r10
+
+	dec bl
+	cmp bl, 00h
+	jne .loop_division
+
+	pop rbx
+	dec rbx			; buf + len - 1
+	mov r10, number_buf
+.skip_nulls:
+	cmp byte [r10 + rbx], '0'
+	jne .reverse_num
+	dec bl
+	cmp bl, 00h
+	je .reverse_num
+	jmp .skip_nulls
+
+.reverse_num:
+	inc rbx						; to print last elem
+.loop_reverse:
+	mov al, byte [r10+rbx-1]
+	mov byte [r9], al
+	inc r9
+
+	cmp bl, 00h
+	dec bl
+	jne .loop_reverse
+	ret
+
+PutNum:
 
 .Oct:
 	xor rbx, rbx
 	mov cl, 3			; shift left
 	mov byte [mask], 111b
-	mov bl, 8			; num signs
+	mov bl, 11			; num signs
 	jmp .get_number
 
 .Bin:
 	xor rbx, rbx
 	mov cl, 1
 	mov byte [mask], 1b
-	mov bl, 16
+	mov bl, 32
 	jmp .get_number
 
 .Hex:
 	xor rbx, rbx
 	mov cl, 4
 	mov byte [mask], 1111b
-	mov bl, 4
+	mov bl, 8
 	jmp .get_number
 
 .get_number:
@@ -248,13 +293,13 @@ mov r10, number_buf
 
 push rbx
 .loop_division:
-	mov dx, ax
-	and dx, [mask]
+	mov edx, eax
+	and edx, [mask]
 	add dx, '0'
 	mov [r10], dx
 	inc r10
 
-	shr ax, cl
+	shr eax, cl
 
 	dec bl
 	cmp bl, 00h
