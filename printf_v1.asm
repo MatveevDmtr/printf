@@ -1,8 +1,12 @@
+;.model flat, C
+
+;MyPrintf          proto fmtStr: ptr, args: vararg
+
 section .data
 
 example_str:		db 'lets celebrate and suck some dick', 0
 
-format_str: 		db "%x %s", 10d, 0	
+format_str: 		db "%%%%%%%x %s", 10d, 0	
 
 mask:				db 'h'
 
@@ -16,6 +20,7 @@ rev_number_buf:     times 16 db 0		            ; for reversing number string
 
 message_error:		db 10d, "Error: Unexpected symbol after %", 10d, 0
 
+;--------------------------------------------------
 section .rodata
 
 jump_table:
@@ -33,18 +38,14 @@ times ('x' - 's' - 1)   dq PutError
 
 section .text
 
-extern printf
-global _start
 global MyPrint
 
-_start:
-
 MyPrint:
-	mov rdi, format_str
-	mov rsi, 655398
-	mov rdx, example_str
+	;mov rdi, format_str
+	;mov rsi, -191932321
+	;mov rdx, example_str
 
-	;pop r13					; saving return address
+	pop r15					; saving return address
 
 	push r9 				; due to the call of the printf, first 6 args are being stored in the following registers			
 	push r8					; other arguments are located in stack
@@ -70,12 +71,12 @@ MyPrint:
 	pop r8
 	pop r9
 
-	;push r13
+	push r15
 
-	;ret
-	mov rax, 0x3c
-	mov rdi, 0
-	syscall					; exit
+	ret
+	;mov rax, 0x3c
+	;mov rdi, 0
+	;syscall					; exit
 
 
 HandleFormatStr:
@@ -198,6 +199,18 @@ PutString:
 	ret
 
 
+CheckNegative:
+	xor r13, r13
+	cmp rax, 00h
+	jge .positive
+
+	mov r13, 1
+	neg rax
+
+.positive:
+	ret
+
+
 PutDecimal:
 .get_number:
 	xor rax, rax
@@ -205,6 +218,7 @@ PutDecimal:
 	mov rax, [rbp]
 	add rbp, 8
 
+	call CheckNegative
 
 	mov r10, number_buf
 	mov rbx, 10			; max num signs
@@ -226,11 +240,20 @@ PutDecimal:
 	mov r10, number_buf
 .skip_nulls:
 	cmp byte [r10 + rbx], '0'
-	jne .reverse_num
+	jne .check_neg
 	dec bl
 	cmp bl, 00h
-	je .reverse_num
+	je .check_neg
 	jmp .skip_nulls
+
+.check_neg:
+	cmp r13, 1
+	jne .positive
+
+	mov byte [r9], '-'
+	inc r9
+
+.positive:
 
 .reverse_num:
 	inc rbx						; to print last elem
@@ -273,6 +296,8 @@ PutNum:
 
 	mov rax, [rbp]
 	add rbp, 8
+
+	call CheckNegative
 
 ;check_bufsize
 	push rax
@@ -317,6 +342,14 @@ mov r10, number_buf
 	jmp .skip_nulls
 
 .reverse_num:
+	cmp r13, 1
+	jne .positive;
+
+	mov byte [r9], '-'
+	inc r9
+
+.positive:
+
 inc rbx						; to print last elem
 .loop_reverse:
 	mov al, byte [r10+rbx-1]
