@@ -26,9 +26,9 @@
 
 ~~~nasm
 mov rsi, buffer
-mov rdx, r9 		   	; msg len
-mov rdi, 1	 		   	; stdout
-mov rax, 1       	 	; syscall for write()
+mov rdx, r9             ; msg len
+mov rdi, 1              ; stdout
+mov rax, 1              ; syscall for write()
 
 syscall
 ~~~
