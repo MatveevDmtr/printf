@@ -6,7 +6,7 @@ int main()
     {
     char sym = 's';
 
-    MyPrint("hihihaha %%%h, %x, %o, %b, %s, %c\n", 0xabcd, 5, 10, "printim strochku", sym);
+    MyPrint("test: %%, %x, %o, %b, %s, %c\n", 0xabcd, 5, 10, "testline", sym);
 
     return 0;
     }

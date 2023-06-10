@@ -8,7 +8,7 @@ extern printf
 
 section .data
 
-example_str:	db 'lets celebrate and suck some dick: %d - %d = %d', 0dh, 0ah,  0
+example_str:	db 'test printing of line: %d - %d = %d', 0dh, 0ah,  0
 
 format_str: 		db "%%%%%%%x %s", 10d, 0	
 
@@ -45,9 +45,6 @@ section .text
 global MyPrint
 
 MyPrint:
-	;mov rdi, format_str
-	;mov rsi, -191932321
-	;mov rdx, example_str
 
 	pop r15					; saving return address
 
@@ -58,12 +55,13 @@ MyPrint:
 	push rsi 																					
 	push rdi																																													
 	
-	mov rdi, example_str
-	mov rsi, 9
-	mov rdx, 3
-	mov rcx, rsi
-	sub rcx, rdx
-	call printf				; call printf from C
+	; 							if you want to call printf from C, uncomment these lines
+	;mov rdi, example_str
+	;mov rsi, 9
+	;mov rdx, 3
+	;mov rcx, rsi
+	;sub rcx, rdx
+	;call printf				; call printf from C
 
 
 
