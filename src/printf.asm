@@ -1,10 +1,14 @@
 ;.model flat, C
 
-;MyPrintf          proto fmtStr: ptr, args: vararg
+;-------------------------------------------------
+;call printf from asm
+;-------------------------------------------------
+extern printf
+;-------------------------------------------------
 
 section .data
 
-example_str:		db 'lets celebrate and suck some dick', 0
+example_str:	db 'lets celebrate and suck some dick: %d - %d = %d', 0dh, 0ah,  0
 
 format_str: 		db "%%%%%%%x %s", 10d, 0	
 
@@ -54,6 +58,15 @@ MyPrint:
 	push rsi 																					
 	push rdi																																													
 	
+	mov rdi, example_str
+	mov rsi, 9
+	mov rdx, 3
+	mov rcx, rsi
+	sub rcx, rdx
+	call printf				; call printf from C
+
+
+
 	mov r9, buffer			; buf pointer
 
 	call HandleFormatStr
@@ -71,12 +84,9 @@ MyPrint:
 	pop r8
 	pop r9
 
-	push r15
+	push r15				; push ret address
 
 	ret
-	;mov rax, 0x3c
-	;mov rdi, 0
-	;syscall					; exit
 
 
 HandleFormatStr:
@@ -139,10 +149,11 @@ HandleArg:
 
 
 PutError:
+
     push rcx     ; syscall destroys rcx and r11, so restore them
 	push r11
 
-	;push rsi
+	push rsi
 	push rdx
 	push rdi
 	push rax
@@ -157,7 +168,7 @@ PutError:
 	pop rax
 	pop rdi
 	pop rdx
-	;pop rsi
+	pop rsi
 
 	pop r11
 	pop rcx
